@@ -189,19 +189,3 @@ This lab reinforced three practical lessons:
 - Suppressing `alert()` changes a visible symptom; it does not eliminate injected JavaScript execution.
 
 A corrective design would validate the expected YouTube host and video ID, create elements using DOM methods, and set validated attributes without concatenating untrusted values into HTML. Any server-rendered HTML still needs encoding appropriate to its output context. These are proposed improvements, not fixes implemented or tested during this lab.
-
-## 7. LLM usage
-
-**Was an LLM used? Yes.** I used ChatGPT to help interpret source and DOM differences, understand attribute boundaries and `innerHTML`, troubleshoot missing error events and dialog overrides, and develop the final L3 iframe payload. An LLM also assisted with report drafting and adapting this portfolio write-up.
-
-I checked the guidance against my own browser work: posting inputs, inspecting source and DOM attributes, reading the override script, observing the diagnostic resource failure, and testing the final submitted payload. Some suggestions failed, including the injected-source attempt, and were revised based on browser evidence. The final L3 payload above is relevant LLM output that I reported as working.
-
-These checks support the recorded outcomes. They do not establish the unrecorded clean-visit checks described in the verification section.
-
-## Source material
-
-- My Lab 6 documentation, including trial notes and screenshots.
-- The CS 5713 Fall 2026 Lab 6 assignment and rubric.
-- The associated ChatGPT troubleshooting conversation.
-
-The original academic report and assignment PDF are not included in this public package because they contain student-specific submission information or course material.

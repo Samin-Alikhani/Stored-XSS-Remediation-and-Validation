@@ -63,18 +63,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </li>
         <?php endforeach; ?>
     </ul>
-    <script>
-    // Deliberately vulnerable rendering for the local XSS lab.
+<script>
     document.querySelectorAll('.video').forEach(function (video) {
-        const url = video.getAttribute('data-url');
-        const videoId = url.split('v=')[1]?.split('&')[0] ?? '';
+        const rawUrl = video.getAttribute('data-url');
 
-        video.innerHTML =
-            '<a href="' + url + '">' +
-            '<img src="https://i.ytimg.com/vi/' + videoId +
-            '/hqdefault.jpg" alt="Video thumbnail">' +
-            '</a>';
+        try {
+            const url = new URL(rawUrl);
+            const allowedHosts = ['www.youtube.com', 'youtube.com'];
+            const videoId = url.searchParams.get('v');
+
+            if (
+                url.protocol !== 'https:' ||
+                !allowedHosts.includes(url.hostname) ||
+                url.port !== '' ||
+                url.username !== '' ||
+                url.password !== '' ||
+                url.pathname !== '/watch' ||
+                !/^[A-Za-z0-9_-]{11}$/.test(videoId ?? '')
+            ) {
+                throw new Error('Invalid YouTube URL');
+            }
+
+            const link = document.createElement('a');
+            link.href = 'https://www.youtube.com/watch?v=' + videoId;
+
+            const image = document.createElement('img');
+            image.src = 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg';
+            image.alt = 'Video thumbnail';
+
+            link.appendChild(image);
+            video.replaceChildren(link);
+        } catch {
+            video.textContent = 'Invalid YouTube URL — entry not rendered.';
+        }
     });
-    </script>
+</script>
 </body>
 </html>

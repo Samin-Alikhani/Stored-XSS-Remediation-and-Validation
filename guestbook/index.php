@@ -56,9 +56,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <h2>Saved entries</h2>
     <ul>
-        <?php foreach ($entries as $entry): ?>
-            <li><?php echo htmlspecialchars($entry, ENT_QUOTES, 'UTF-8'); ?></li>
+        <?php foreach (array_reverse($entries) as $entry): ?>
+            <li class="video"
+                data-url="<?php echo htmlspecialchars($entry, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php echo htmlspecialchars($entry, ENT_QUOTES, 'UTF-8'); ?>
+            </li>
         <?php endforeach; ?>
     </ul>
+    <script>
+    // Deliberately vulnerable rendering for the local XSS lab.
+    document.querySelectorAll('.video').forEach(function (video) {
+        const url = video.getAttribute('data-url');
+        const videoId = url.split('v=')[1]?.split('&')[0] ?? '';
+
+        video.innerHTML =
+            '<a href="' + url + '">' +
+            '<img src="https://i.ytimg.com/vi/' + videoId +
+            '/hqdefault.jpg" alt="Video thumbnail">' +
+            '</a>';
+    });
+    </script>
 </body>
 </html>

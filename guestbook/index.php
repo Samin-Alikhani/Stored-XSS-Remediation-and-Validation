@@ -18,6 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($url === '') {
         $message = 'Please enter a URL.';
+    } elseif (!preg_match(
+        '~\Ahttps://(?:www\.)?youtube\.com/watch\?v=[A-Za-z0-9_-]{11}\z~',
+        $url
+    )) {
+        $message = 'Enter a YouTube URL in the format https://www.youtube.com/watch?v=VIDEO_ID';
     } else {
         $entries[] = $url;
 

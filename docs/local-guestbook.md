@@ -11,13 +11,13 @@ The project uses PHP, JavaScript, HTML, JSON file storage, Git, and GitHub. My d
 Install PHP and Git. Python 3 is needed only for automated tests. From Terminal:
 
 ```bash
-git clone https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass.git
-cd Stored-XSS-Analysis-and-Defense-Bypass
+git clone https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation.git
+cd Stored-XSS-Remediation-and-Validation
 mkdir -p storage
 php -S 127.0.0.1:8000 -t guestbook
 ```
 
-The repository is private, so cloning requires access and GitHub authentication. If GitHub CLI is installed, `gh auth login` supports browser authentication. The completed project is on `main`.
+The repository is public and can be cloned without signing in. The completed project is on `main`. GitHub authentication is required only to push changes.
 
 Open the fixed page at <http://127.0.0.1:8000/> and the intentionally vulnerable demonstration at <http://127.0.0.1:8000/vulnerable.php>. Keep this educational application on localhost. Stop the server with Control+C. External thumbnail images require internet access.
 

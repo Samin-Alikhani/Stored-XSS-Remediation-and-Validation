@@ -1,4 +1,4 @@
-# Stored XSS: Reproduction, Remediation & Validation
+# Stored XSS: Secure Coding & Security Validation
 
 An application security case study that traces a stored cross-site scripting vulnerability from root cause to implemented controls and repeatable regression tests.
 
@@ -22,7 +22,7 @@ I built a local PHP video guestbook, reproduced JavaScript execution from a save
 - **Secure code review and remediation:** removed an unsafe DOM sink, constrained accepted URLs, and built canonical destinations from validated video IDs.
 - **Control testing:** checked both preventive validation and safe handling of legacy data, while preserving valid application behavior.
 - **Risk communication:** distinguished demonstrated script execution from potential business impact and documented residual risks in a [threat model and review](docs/security-review.md).
-- **Version control:** developed on a feature branch, reviewed staged changes, made focused commits, and merged through [pull request #1](https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass/pull/1). [Development record →](docs/local-guestbook.md#git-workflow)
+- **Version control:** developed on a feature branch, reviewed staged changes, made focused commits, and merged through [pull request #1](https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation/pull/1). [Development record →](docs/local-guestbook.md#git-workflow)
 
 ## Root cause and fix
 
@@ -62,11 +62,11 @@ Initial HTML encoding protects the original attribute boundary. It does not make
 
 ## Run the application
 
-Requires PHP 8.1+ and Git. Tested during development with Homebrew PHP 8.5.12 on macOS. Repository access is required while it remains private.
+Requires PHP 8.1+ and Git. Tested during development with Homebrew PHP 8.5.12 on macOS. The repository is public; no GitHub sign-in is required to clone it.
 
 ```bash
-git clone https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass.git
-cd Stored-XSS-Analysis-and-Defense-Bypass
+git clone https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation.git
+cd Stored-XSS-Remediation-and-Validation
 mkdir -p storage
 php -S 127.0.0.1:8000 -t guestbook
 ```

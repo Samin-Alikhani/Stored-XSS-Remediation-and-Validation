@@ -14,11 +14,11 @@ I built a local PHP video guestbook, reproduced JavaScript execution from a save
 | A saved image-error payload displays `Hello` on a later visit. | The tested legacy payload renders as an invalid-entry message without an alert. |
 | Arbitrary nonempty input reaches JSON storage. | PHP rejects input outside the supported YouTube URL format before saving. |
 
-**Validation:** five HTTP regression tests and three Chromium browser tests. The suites use disposable storage and a separate localhost server. Historical manual checks also cover fresh-visit execution, rejected-submission storage hashes, and valid thumbnail behavior. [Coverage and reproduction steps →](docs/validation.md)
+**Automated local validation:** five HTTP regression tests and three Chromium browser tests. The suites use disposable storage and a separate localhost server. Historical manual checks also cover fresh-visit execution, rejected-submission storage hashes, and valid thumbnail behavior. [Coverage and reproduction steps →](docs/validation.md)
 
 ## OWASP alignment
 
-This project addresses **OWASP Top 10:2025 — A05: Injection**, specifically stored cross-site scripting (**CWE-79**). Implemented controls include server-side URL allowlisting, context-appropriate HTML encoding, and safe DOM construction, verified with HTTP and browser regression tests. This is focused coverage of an XSS path, not implementation or certification of the entire OWASP Top 10. [OWASP category reference](https://top10.owasp.org/2025/A05_2025-Injection/)
+This project addresses **OWASP Top 10:2025 — A05: Injection**, specifically stored cross-site scripting (**CWE-79**). Implemented controls include server-side URL allowlisting, context-appropriate HTML encoding, and safe DOM construction, verified with HTTP and browser regression tests. [OWASP category reference](https://top10.owasp.org/2025/A05_2025-Injection/)
 
 ## Security engineering demonstrated
 
@@ -56,17 +56,26 @@ Initial HTML encoding protects the original attribute boundary. It does not make
 
 ![Local guestbook displaying a Hello alert before remediation](images/local-xss-before.png)
 
-*Execution before remediation, captured while the vulnerable implementation was still `index.php`. Persistence was checked separately; a single screenshot does not establish it.*
+*The vulnerable guestbook executes the injected image-error handler and displays a `Hello` alert.*
 
 ### Fixed rendering
 
 ![Fixed guestbook rejecting an invalid saved entry while preserving a valid thumbnail](images/local-xss-after.png)
 
-*An existing invalid entry is replaced with text while a valid thumbnail remains. These are cropped development captures; the underlying results were not recreated.*
+*The fixed renderer replaces an invalid saved entry with text while preserving a valid video thumbnail.*
+
+## Prerequisites
+
+| Component | Requirement |
+| --- | --- |
+| Application | PHP 8.1+, Git, and a modern browser. |
+| HTTP tests | Python 3.10+; no additional Python packages. |
+| Browser tests | Python 3.10+ with `venv` and `pip`, Playwright from `requirements-dev.txt`, and its Chromium browser. Installation commands are below. |
+| Network | Internet access for cloning, installing test dependencies, and displaying live thumbnails. Browser tests block external thumbnail requests. |
+
+Development and local validation used macOS with Homebrew PHP 8.5.12. The commands below use a macOS/Linux shell.
 
 ## Run the application
-
-Requires PHP 8.1+ and Git. Tested during development with Homebrew PHP 8.5.12 on macOS. The repository is public; no GitHub sign-in is required to clone it.
 
 ```bash
 git clone https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation.git
@@ -84,13 +93,13 @@ Supported submission example: `https://www.youtube.com/watch?v=bGpB9q6Oym0`. Sho
 
 ## Run the tests
 
-HTTP checks need Python 3 and PHP, with no extra Python packages:
+Run the automated local HTTP checks:
 
 ```bash
 python3 tests/test_guestbook.py
 ```
 
-Browser checks additionally use Playwright and Chromium:
+Install the browser-test dependencies and run the local Chromium checks:
 
 ```bash
 python3 -m venv .venv
@@ -100,7 +109,9 @@ python -m playwright install chromium
 python tests/test_browser.py
 ```
 
-[Detailed validation matrix and limitations →](docs/validation.md)
+[Detailed validation matrix and evidence →](docs/validation.md)
+
+The GitHub Actions configuration under `docs/ci/` is an **inactive template**. Completed functionality is automated local regression testing; hosted CI/CD is not implemented.
 
 ## Project guide
 
@@ -113,6 +124,4 @@ python tests/test_browser.py
 
 ## Scope and ownership
 
-This independent local reproduction grew from an authorized course investigation. The original university application was not modified. I ran the development commands and manual browser checks with AI guidance; later completion work added documentation and automated tests with AI assistance.
-
-This is a focused XSS remediation case study. Authentication, CSRF protection, concurrent JSON updates, and production error handling remain outside the implemented controls. No payment system, customer data, or employer environment was tested. Potential impact beyond the observed alert is discussed as a threat scenario, not a demonstrated compromise.
+An independent localhost XSS case study developed from an authorized course investigation with AI assistance. I ran the development commands and manual browser checks; completion work added documentation and automated local tests. The focus is stored-XSS remediation, with evidence boundaries and remaining application risks documented in the [validation guide](docs/validation.md#evidence-provenance-and-limitations) and [security review](docs/security-review.md).

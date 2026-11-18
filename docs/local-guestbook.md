@@ -8,18 +8,7 @@ The project uses PHP, JavaScript, HTML, JSON file storage, Git, and GitHub. My d
 
 ## Run locally
 
-Install PHP and Git. Python 3 is needed only for automated tests. From Terminal:
-
-```bash
-git clone https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation.git
-cd Stored-XSS-Remediation-and-Validation
-mkdir -p storage
-php -S 127.0.0.1:8000 -t guestbook
-```
-
-The repository is public and can be cloned without signing in. The completed project is on `main`. GitHub authentication is required only to push changes.
-
-Open the fixed page at <http://127.0.0.1:8000/> and the intentionally vulnerable demonstration at <http://127.0.0.1:8000/vulnerable.php>. Keep this educational application on localhost. Stop the server with Control+C. External thumbnail images require internet access.
+Follow the [complete prerequisites and setup instructions](../README.md#prerequisites) in the README. The completed application is on `main`.
 
 The server document root is `guestbook/`; JSON storage is outside it. The fixed page writes `storage/entries.json`; the vulnerable page writes `storage/vulnerable-entries.json`. Both files are created on submission and ignored by Git. Duplicate submissions are allowed. Entries display newest first.
 
@@ -53,21 +42,19 @@ https://www.youtube.com/watch?v=bGpB9q6Oym0"><img src=x onerror="alert('Hello')"
 | Submit a valid watch URL after validation | Thumbnail appeared at the top and persisted on a fresh visit. |
 | Refresh after a successful submission | Entry count stayed unchanged; the POST/303/GET flow prevented refresh resubmission. |
 
-These are manually reported browser checks from development. They do not establish that every possible XSS payload has been tested. The original `l1-`, `l2-`, and `l3-` screenshots in `images/` document the course lab. The local screenshots below document this independent reproduction.
+Evidence provenance and coverage limits are consolidated in the [validation guide](validation.md#evidence-provenance-and-limitations).
 
-To repeat the vulnerable demonstration, submit the payload to `/vulnerable.php`, dismiss the alert, and revisit that address without submitting. To repeat legacy-data remediation testing without changing personal data, use a disposable copy: first store the payload while its default page is vulnerable, then apply the rendering fix and revisit. Do not move vulnerable data into a real application.
+See the [manual reproduction steps](validation.md#reproduce-manually) to repeat these checks.
 
 ## Local screenshot evidence
 
 ![Local guestbook displaying a Hello alert before remediation](../images/local-xss-before.png)
 
-*Before remediation: the original local `index.php` displays a `Hello` alert alongside malformed injected markup. This capture predates the split into vulnerable and fixed pages. It demonstrates execution; the fresh-visit persistence result is recorded in the manual checks above.*
+*The vulnerable renderer executes the injected image-error handler and displays `Hello`.*
 
 ![Fixed local guestbook displaying invalid-entry text and a valid thumbnail](../images/local-xss-after.png)
 
-*After the rendering fix: an existing invalid entry displays “Invalid YouTube URL — entry not rendered.” A valid video thumbnail remains visible below it. This capture documents rendering behavior, not server-side storage rejection or automated test results.*
-
-Both images are crops of the original development screenshots. Chat panes, unrelated controls, and excess page area were removed; page content and results were not recreated or altered.
+*The fixed renderer replaces an invalid saved entry with a message and preserves a valid video thumbnail.*
 
 ## Automated regression checks
 
@@ -85,16 +72,7 @@ These HTTP tests do not execute JavaScript. The additional browser suite in `tes
 
 ## Git workflow
 
-I cloned the existing repository, created `local-guestbook`, reviewed changes with `git diff`, selected files with `git add`, reviewed staged changes with `git diff --cached`, made focused commits, and pushed the branch to GitHub. I configured a repository-local GitHub noreply email and amended the first unpushed commit after GitHub blocked a private-email push. Runtime JSON data is excluded through `.gitignore`.
-
-Examples in the branch history:
-
-- `9ab78e7`: local PHP starter page.
-- `8830769`: form and encoded output.
-- `2519a31`: JSON persistence.
-- `f4569cf`: URL checks and safe DOM rendering.
-
-Separate commits preserve the vulnerable behavior and the two remediation stages for comparison. The completion pull request collects application code, tests, setup instructions, and this report for review against `main`.
+I developed on the `local-guestbook` feature branch, reviewed working and staged changes, and made focused commits for persistence, the vulnerable reproduction, and remediation. The application and supporting documentation were merged into `main` through [pull request #1](https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation/pull/1). [Pull request #2](https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation/pull/2) added the case-study structure and browser regression tests. Runtime JSON data is excluded through `.gitignore`.
 
 ## Limits and next improvements
 

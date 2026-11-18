@@ -13,7 +13,7 @@ Five HTTP test methods and three browser test methods are provided. Individual i
 
 ## Setup
 
-PHP 8.1+ and Python 3.10+ are prerequisites. Run HTTP tests without extra packages:
+Use the [complete prerequisites](../README.md#prerequisites): PHP 8.1+, Git, and Python 3.10+. Browser checks also require Python `venv`/`pip`, the pinned Playwright development dependency, and Chromium. The shell commands target macOS/Linux. Run HTTP tests without extra packages:
 
 ```bash
 python3 tests/test_guestbook.py
@@ -47,14 +47,22 @@ https://www.youtube.com/watch?v=bGpB9q6Oym0"><img src=x onerror="alert('Hello')"
 
 The fixed renderer's protection is tested independently of new-submission validation by writing a legacy payload into temporary fixed-page storage before the browser loads it. This prevents a passing input-rejection check from hiding a regression in rendering.
 
-## Results and evidence boundaries
+## Local test results
 
 Completion review on November 17, 2026: all five HTTP checks and all three Chromium browser checks passed locally against the unchanged PHP application. Both PHP files also passed syntax validation. Existing screenshots reflect the development stages described in the [development record](local-guestbook.md#local-screenshot-evidence).
 
 These targeted HTTP and browser tests demonstrate dynamic security regression testing. They are not a general DAST scan. No SAST or software-composition-analysis result is claimed. The application has no third-party runtime packages; the browser automation library is a development dependency and still requires maintenance.
 
-## Continuous integration template
+## Evidence provenance and limitations
 
-A [GitHub Actions template](ci/regression.yml) contains the same syntax, HTTP, and Chromium commands. An initial GitHub attempt failed at workflow startup before creating any jobs; the available API exposed no diagnostic annotations. It is retained as an inactive template rather than presenting unverified CI as a passing control. Local execution of the tests passed.
+The local before/after screenshots are original development captures. The vulnerable capture predates the split into `vulnerable.php` and fixed `index.php`; it shows execution, while persistence is supported by the separately recorded fresh-visit check and the browser regression test. The fixed capture shows legacy-entry rejection and a valid thumbnail, not server-side storage rejection or automated test output.
+
+The images were cropped to remove chat panes, unrelated controls, and excess page area. Application content and results were not recreated or altered. The `l1-`, `l2-`, and `l3-` images support the [original course investigation](original-investigation.md), with its separate evidence limits.
+
+The test set covers the exercised stored-XSS path in Chromium, not every payload, browser, or OWASP Top 10 category. The OWASP mapping identifies A05:2025 Injection (CWE-79); it is not an OWASP certification. No payment system, customer data, or employer environment was tested. Impact beyond the observed script execution is a threat scenario, not a demonstrated compromise.
+
+## Inactive CI template
+
+A [GitHub Actions template](ci/regression.yml) contains the same syntax, HTTP, and Chromium commands. An initial GitHub attempt failed at workflow startup before creating any jobs; the available API exposed no diagnostic annotations. The file remains under `docs/ci/`, outside GitHub’s active workflow directory. It does not run automatically. The completed automation is the locally executed HTTP and browser regression suites.
 
 To enable it after resolving the startup issue, copy the template into `.github/workflows/regression.yml` and inspect the resulting Actions run. No CI badge or hosted-test success is claimed.

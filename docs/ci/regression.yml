@@ -1,0 +1,29 @@
+name: Security regression tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check prerequisites
+        run: |
+          php --version
+          python3 --version
+      - name: Check PHP syntax
+        run: |
+          php -l guestbook/index.php
+          php -l guestbook/vulnerable.php
+      - name: Run HTTP regression tests
+        run: python3 tests/test_guestbook.py
+      - name: Install browser test dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          .venv/bin/python -m playwright install --with-deps chromium
+      - name: Run Chromium regression tests
+        run: .venv/bin/python tests/test_browser.py

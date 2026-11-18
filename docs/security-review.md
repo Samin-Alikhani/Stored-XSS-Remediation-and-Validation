@@ -6,6 +6,10 @@
 
 **Disposition:** remediated for the exercised path in the fixed page; intentionally retained in `vulnerable.php` for localhost comparison. The regression suite is finite, not proof of absence of all XSS.
 
+## Classification
+
+**OWASP Top 10:2025 A05 — Injection; CWE-79 (Cross-site Scripting).** The controls target the stored-XSS path exercised in this application. They do not establish coverage of other Injection weaknesses or all Top 10 categories. [OWASP A05 reference](https://top10.owasp.org/2025/A05_2025-Injection/)
+
 ## Assets, actors, and boundaries
 
 | Element | Scope |

@@ -16,6 +16,10 @@ I built a local PHP video guestbook, reproduced JavaScript execution from a save
 
 **Validation:** five HTTP regression tests and three Chromium browser tests. The suites use disposable storage and a separate localhost server. Historical manual checks also cover fresh-visit execution, rejected-submission storage hashes, and valid thumbnail behavior. [Coverage and reproduction steps →](docs/validation.md)
 
+## OWASP alignment
+
+This project addresses **OWASP Top 10:2025 — A05: Injection**, specifically stored cross-site scripting (**CWE-79**). Implemented controls include server-side URL allowlisting, context-appropriate HTML encoding, and safe DOM construction, verified with HTTP and browser regression tests. This is focused coverage of an XSS path, not implementation or certification of the entire OWASP Top 10. [OWASP category reference](https://top10.owasp.org/2025/A05_2025-Injection/)
+
 ## Security engineering demonstrated
 
 - **Vulnerability analysis:** followed input from POST submission through storage, HTML encoding, DOM attribute retrieval, and a second HTML interpretation boundary.

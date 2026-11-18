@@ -1,14 +1,14 @@
 # Security Review and Threat Model
 
-## Executive finding
+## Finding
 
 **Finding XSS-001 — Stored input reaches an unsafe DOM sink (CWE-79).** A submitted URL is stored and later concatenated into `innerHTML`. A harmless image-error payload demonstrates script execution when the stored entry is rendered. The fixed implementation rejects unsupported submissions and replaces HTML-string construction with direct DOM creation.
 
-**Disposition:** remediated for the exercised path in the fixed page; intentionally retained in `vulnerable.php` for localhost comparison. The regression suite is finite, not proof of absence of all XSS.
+**Status:** fixed in `index.php` and retained in `vulnerable.php` for local comparison.
 
 ## Classification
 
-**OWASP Top 10:2025 A05 — Injection; CWE-79 (Cross-site Scripting).** The controls target the stored-XSS path exercised in this application. They do not establish coverage of other Injection weaknesses or all Top 10 categories. [OWASP A05 reference](https://top10.owasp.org/2025/A05_2025-Injection/)
+**OWASP Top 10:2025 A05 — Injection; CWE-79 (Cross-site Scripting).** [OWASP A05 reference](https://top10.owasp.org/2025/A05_2025-Injection/)
 
 ## Assets, actors, and boundaries
 
@@ -21,7 +21,7 @@
 | Trusted components | Application code and local filesystem. Stored content remains untrusted. |
 | Exclusions | No login/session system, payments, actual customer records, multiuser deployment, or university server access in this reproduction. |
 
-The key boundary is the second parser: a string safely carried in an encoded attribute becomes dangerous when subsequently interpreted as HTML.
+The critical boundary is the later `innerHTML` assignment, which turns an attribute value back into parsed HTML.
 
 ## Secure code review record
 
@@ -36,11 +36,11 @@ The key boundary is the second parser: a string safely carried in an encoded att
 | Repeat submissions | POST redirects with 303; GET does not append. Duplicate intentional submissions remain allowed. | HTTP refresh/persistence check. |
 | Data separation | Fixed and vulnerable versions use different ignored files outside the document root. | Storage-isolation test. |
 
-The PHP and browser parsers are not identical: the browser canonicalizes a parsed URL and may render some old values with extra parameters, whereas PHP rejects extra parameters on new submissions. Safe construction prevents those old values from injecting markup, but unifying policy is a future maintainability improvement.
+PHP rejects extra parameters on new submissions. The browser can render some older URLs with extra parameters, but rebuilds their destinations from validated IDs. Aligning these policies would simplify maintenance.
 
 ## Impact and prioritization
 
-Observed impact is JavaScript execution under the local guestbook origin, including on a later visit. In a hypothetical authenticated application, origin-level script execution could alter page content, initiate actions as the user, or read data accessible to JavaScript. Those outcomes were not implemented or demonstrated here. An alert does not prove credential theft, payment compromise, or account takeover.
+The demonstrated impact is JavaScript execution under the guestbook origin on a later visit. In an authenticated application, this could allow page manipulation, actions as the user, or access to data available to JavaScript. Those are potential consequences, not results demonstrated in this project.
 
 For a shared application this path warrants prompt remediation because one stored submission can affect subsequent visitors without a video click. The localhost scope limits actual exposure in this project. No numeric CVSS score is assigned because deployment, privileges, user population, and accessible data are not established.
 
@@ -54,7 +54,7 @@ For a shared application this path warrants prompt remediation because one store
 | Use disposable test storage | Prevents regression runs from changing personal demo entries. | JSON remains a single-user storage design. |
 | Block external thumbnails during tests | Keeps security assertions independent of external availability. | Browser tests verify URLs/DOM, not live image downloads. |
 
-Open items: CSRF defenses and abuse limits; authentication if shared; transactional storage for concurrent updates; corrupted-JSON and filesystem error handling; broader browser/payload coverage; dependency review if runtime packages are introduced. These are explicit scope limits, not completed mitigations.
+Open items: CSRF defenses and abuse limits; authentication if shared; transactional storage for concurrent updates; corrupted-JSON and filesystem error handling; broader browser/payload coverage; dependency review if runtime packages are introduced. See the [validation guide](validation.md#evidence-provenance-and-limitations) for test coverage and evidence limits.
 
 ## References
 

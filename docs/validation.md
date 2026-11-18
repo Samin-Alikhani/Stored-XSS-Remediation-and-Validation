@@ -9,7 +9,7 @@
 | Chromium regression | `python tests/test_browser.py` | Stored payload executes in vulnerable page on visit/reload; fixed legacy rendering and form rejection remain safe for tested inputs. | One browser and a finite payload set. |
 | Manual browser checks | Development record | Historical thumbnail, fresh-visit, and hash observations. | Reported observations; screenshots alone do not prove persistence. |
 
-Five HTTP test methods and three browser test methods are provided. Individual invalid inputs are subcases, not separate test counts. Both suites copy application files into temporary directories, create their own storage and localhost server, and clean up afterward. They do not operate on an already-running personal guestbook.
+The suites contain five HTTP tests and three browser tests; invalid-input variations are subcases. Each suite runs a temporary application copy with its own storage and server, then cleans up.
 
 ## Setup
 
@@ -29,7 +29,7 @@ python -m playwright install chromium
 python tests/test_browser.py
 ```
 
-Browser tests block external YouTube thumbnail requests. They check DOM destinations and execution behavior rather than availability of videos or images. An expected `Hello` dialog is dismissed automatically by the test and asserted as evidence of the vulnerable behavior. Fixed-page tests assert no dialog, no JavaScript error, rejection text, and absence of injected event-handler elements.
+Browser tests block external thumbnail requests and check generated URLs and JavaScript behavior. They detect and dismiss the vulnerable page’s `Hello` alert. On the fixed page, they check rejection text, valid links, and the absence of alerts, script errors, and injected event handlers.
 
 ## Reproduce manually
 
@@ -45,7 +45,7 @@ Use a disposable clone and start `php -S 127.0.0.1:8000 -t guestbook` from its r
 https://www.youtube.com/watch?v=bGpB9q6Oym0"><img src=x onerror="alert('Hello')">
 ```
 
-The fixed renderer's protection is tested independently of new-submission validation by writing a legacy payload into temporary fixed-page storage before the browser loads it. This prevents a passing input-rejection check from hiding a regression in rendering.
+The browser suite seeds an old payload directly into temporary storage to test rendering independently of submission validation.
 
 ## Local test results
 
@@ -63,6 +63,6 @@ The test set covers the exercised stored-XSS path in Chromium, not every payload
 
 ## Inactive CI template
 
-A [GitHub Actions template](ci/regression.yml) contains the same syntax, HTTP, and Chromium commands. An initial GitHub attempt failed at workflow startup before creating any jobs; the available API exposed no diagnostic annotations. The file remains under `docs/ci/`, outside GitHub’s active workflow directory. It does not run automatically. The completed automation is the locally executed HTTP and browser regression suites.
+The [GitHub Actions template](ci/regression.yml) contains the local test commands. The initial hosted run failed before starting any jobs, without a diagnostic message. The file is stored in `docs/ci/` and does not run automatically.
 
-To enable it after resolving the startup issue, copy the template into `.github/workflows/regression.yml` and inspect the resulting Actions run. No CI badge or hosted-test success is claimed.
+To enable it, resolve the startup issue, copy the template to `.github/workflows/regression.yml`, and verify the resulting run.

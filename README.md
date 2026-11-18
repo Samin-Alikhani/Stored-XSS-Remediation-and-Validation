@@ -1,8 +1,6 @@
 # Stored XSS: Secure Coding & Security Validation
 
-An application security case study that traces a stored cross-site scripting vulnerability from root cause to implemented controls and repeatable regression tests.
-
-I built a local PHP video guestbook, reproduced JavaScript execution from a saved URL, and remediated the unsafe rendering path with server-side URL validation and safe DOM construction. Vulnerable and fixed versions are preserved for comparison, alongside test results and a documented Git workflow.
+I built a PHP video guestbook to reproduce stored cross-site scripting (XSS), trace its cause, and test a fix. The project pairs vulnerable and fixed versions with server-side URL validation, safe DOM rendering, and automated regression tests.
 
 **Stack:** PHP · JavaScript · HTML · JSON · Python · Playwright · Git / GitHub
 
@@ -14,18 +12,18 @@ I built a local PHP video guestbook, reproduced JavaScript execution from a save
 | A saved image-error payload displays `Hello` on a later visit. | The tested legacy payload renders as an invalid-entry message without an alert. |
 | Arbitrary nonempty input reaches JSON storage. | PHP rejects input outside the supported YouTube URL format before saving. |
 
-**Automated local validation:** five HTTP regression tests and three Chromium browser tests. The suites use disposable storage and a separate localhost server. Historical manual checks also cover fresh-visit execution, rejected-submission storage hashes, and valid thumbnail behavior. [Coverage and reproduction steps →](docs/validation.md)
+**Results:** all five HTTP tests and three Chromium browser tests passed locally. Tests use temporary storage and their own localhost server. Manual checks also verified persistence, unchanged storage after rejection, and valid thumbnails. [Coverage and reproduction steps →](docs/validation.md)
 
 ## OWASP alignment
 
-This project addresses **OWASP Top 10:2025 — A05: Injection**, specifically stored cross-site scripting (**CWE-79**). Implemented controls include server-side URL allowlisting, context-appropriate HTML encoding, and safe DOM construction, verified with HTTP and browser regression tests. [OWASP category reference](https://top10.owasp.org/2025/A05_2025-Injection/)
+This project addresses **OWASP Top 10:2025 — A05: Injection**, specifically stored XSS (**CWE-79**), through URL validation, HTML output encoding, and safe DOM construction. [OWASP category reference](https://top10.owasp.org/2025/A05_2025-Injection/)
 
-## Security engineering demonstrated
+## Skills demonstrated
 
-- **Vulnerability analysis:** followed input from POST submission through storage, HTML encoding, DOM attribute retrieval, and a second HTML interpretation boundary.
-- **Secure code review and remediation:** removed an unsafe DOM sink, constrained accepted URLs, and built canonical destinations from validated video IDs.
-- **Control testing:** checked both preventive validation and safe handling of legacy data, while preserving valid application behavior.
-- **Risk communication:** distinguished demonstrated script execution from potential business impact and documented residual risks in a [threat model and review](docs/security-review.md).
+- **Vulnerability analysis:** traced submitted input through storage, encoded HTML, and JavaScript rendering.
+- **Secure code review and remediation:** replaced `innerHTML` with DOM methods and built video links from validated IDs.
+- **Control testing:** verified rejection of new payloads, safe handling of old entries, and normal functionality.
+- **Risk communication:** assessed impact and remaining risks in a [threat model and review](docs/security-review.md).
 - **Version control:** developed on a feature branch, reviewed staged changes, made focused commits, and merged through [pull request #1](https://github.com/Samin-Alikhani/Stored-XSS-Remediation-and-Validation/pull/1). [Development record →](docs/local-guestbook.md#git-workflow)
 
 ## Root cause and fix
@@ -41,7 +39,7 @@ flowchart LR
     F --> H[Canonical video link or plain rejection text]
 ```
 
-Initial HTML encoding protects the original attribute boundary. It does not make a later `innerHTML` assignment safe. The remediation addresses both input acceptance and the DOM sink, consistent with [OWASP XSS prevention guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).
+PHP encodes the saved URL, but the vulnerable JavaScript later parses it as HTML through `innerHTML`. The fix validates new submissions and creates DOM elements directly, following [OWASP XSS prevention guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).
 
 | Control | Implementation | Evidence |
 | --- | --- | --- |
@@ -87,9 +85,9 @@ php -S 127.0.0.1:8000 -t guestbook
 - Fixed application: <http://127.0.0.1:8000/>
 - Intentionally vulnerable comparison: <http://127.0.0.1:8000/vulnerable.php>
 
-Use localhost only. Stop the server with Control+C. Storage stays outside the served directory. Thumbnails require internet access; security tests block external thumbnail requests.
+Run on localhost and stop with Control+C. Saved entries stay outside the served directory.
 
-Supported submission example: `https://www.youtube.com/watch?v=bGpB9q6Oym0`. Short links and extra query parameters are deliberately outside the current submission policy.
+Example input: `https://www.youtube.com/watch?v=bGpB9q6Oym0`. Short links and extra query parameters are not supported.
 
 ## Run the tests
 
@@ -111,7 +109,7 @@ python tests/test_browser.py
 
 [Detailed validation matrix and evidence →](docs/validation.md)
 
-The GitHub Actions configuration under `docs/ci/` is an **inactive template**. Completed functionality is automated local regression testing; hosted CI/CD is not implemented.
+Tests run locally. The GitHub Actions file in `docs/ci/` is an **inactive template**, not a working CI pipeline.
 
 ## Project guide
 
@@ -124,4 +122,4 @@ The GitHub Actions configuration under `docs/ci/` is an **inactive template**. C
 
 ## Scope and ownership
 
-An independent localhost XSS case study developed from an authorized course investigation with AI assistance. I ran the development commands and manual browser checks; completion work added documentation and automated local tests. The focus is stored-XSS remediation, with evidence boundaries and remaining application risks documented in the [validation guide](docs/validation.md#evidence-provenance-and-limitations) and [security review](docs/security-review.md).
+This local project grew from an authorized course investigation. I ran the development commands and manual checks with AI guidance; documentation and automated tests were also developed with AI assistance. See the [validation guide](docs/validation.md#evidence-provenance-and-limitations) and [security review](docs/security-review.md).

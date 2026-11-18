@@ -2,7 +2,7 @@
 
 ## Project scope
 
-After analyzing the instructor-provided guestbooks, I built an independent PHP guestbook on my MacBook to reproduce the unsafe DOM rendering pattern and implement a fix. This application is my local reproduction; it is not the original university application or a patch to its server. The [original investigation](original-investigation.md) retains the course-lab evidence and its limits.
+I built this PHP guestbook on my MacBook after investigating unsafe rendering in an authorized course lab. The local application reproduces the pattern and implements a fix. The [original investigation](original-investigation.md) preserves the background findings.
 
 The project uses PHP, JavaScript, HTML, JSON file storage, Git, and GitHub. My development environment used Homebrew PHP 8.5.12 and Git 2.55.0.
 
@@ -21,7 +21,7 @@ The fixed page retains PHP HTML output encoding and adds two protections:
 - PHP accepts only `https://youtube.com/watch?v=VIDEO_ID` or the `www` equivalent, with exactly eleven letters, digits, underscores, or hyphens in the ID. Extra parameters, short links, other hosts, and appended markup are rejected before storage.
 - JavaScript validates the URL and video ID, constructs canonical link and thumbnail URLs, and uses `createElement`, `appendChild`, and `replaceChildren`. Invalid old entries display a text message. Submitted strings are no longer parsed through `innerHTML`.
 
-Client-side rendering checks and server-side acceptance have different roles. PHP enforces the strict submission format; the DOM code safely handles values already present in storage.
+PHP validates new submissions; the renderer also protects against unsafe entries already in storage.
 
 ## Manual browser validation — November 17, 2026
 
@@ -64,7 +64,7 @@ From the repository root:
 python3 tests/test_guestbook.py
 ```
 
-The suite copies the application to a temporary directory, starts its own PHP server on a temporary localhost port, creates separate JSON files, and removes them after testing. It does not use or reset the developer's stored entries.
+The suite runs a temporary copy with its own PHP server and JSON files, leaving the developer’s saved entries untouched.
 
 Five tests cover valid persistence and refresh behavior; rejected payloads and malformed URLs without storage changes; array-shaped form input; HTML encoding of a legacy payload; and separate vulnerable-demo storage and redirects. All five passed during the November 17 completion review.
 

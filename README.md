@@ -1,197 +1,114 @@
-# Stored XSS Across Three Defensive Layers
+# Stored XSS: Reproduction, Remediation & Validation
 
-A hands-on web security lab investigating how stored input becomes executable HTML, why initial output encoding can fail at a later DOM sink, and why replacing `alert()` does not prevent JavaScript execution.
+An application security case study that traces a stored cross-site scripting vulnerability from root cause to implemented controls and repeatable regression tests.
 
-**Tools:** Firefox, View Page Source, Inspector, and Console
+I built a local PHP video guestbook, reproduced JavaScript execution from a saved URL, and remediated the unsafe rendering path with server-side URL validation and safe DOM construction. Vulnerable and fixed versions are preserved for comparison, alongside test results and a documented Git workflow.
 
-## Local reproduction and implemented remediation
+**Stack:** PHP · JavaScript · HTML · JSON · Python · Playwright · Git / GitHub
 
-I extended this analysis with an independent PHP guestbook developed locally on my MacBook. It includes vulnerable and fixed versions, separate JSON storage, server-side URL validation, safe DOM construction, and repeatable HTTP regression tests. I confirmed the local payload persisted before remediation and checked rejection and normal functionality after the fixes.
+## Outcome
 
-**[Setup, implementation, test results, and Git workflow](docs/local-guestbook.md)** · [Fixed application](guestbook/index.php) · [Vulnerable demonstration](guestbook/vulnerable.php) · [Automated tests](tests/test_guestbook.py)
+| Before | After |
+| --- | --- |
+| Stored input becomes executable markup through `innerHTML`. | DOM elements are created directly; submitted strings are never interpreted as HTML by the fixed renderer. |
+| A saved image-error payload displays `Hello` on a later visit. | The tested legacy payload renders as an invalid-entry message without an alert. |
+| Arbitrary nonempty input reaches JSON storage. | PHP rejects input outside the supported YouTube URL format before saving. |
 
-The course-lab report below is preserved separately; its evidence limits concern the original instructor-provided application.
+**Validation:** five HTTP regression tests and three Chromium browser tests. The suites use disposable storage and a separate localhost server. Historical manual checks also cover fresh-visit execution, rejected-submission storage hashes, and valid thumbnail behavior. [Coverage and reproduction steps →](docs/validation.md)
 
-## Overview
+## Security engineering demonstrated
 
-I tested three versions of an instructor-provided VideoBlog guestbook. Each version accepted a YouTube URL and displayed a video entry. My objective was to store an input that displayed a `Hello` alert when the guestbook was visited.
+- **Vulnerability analysis:** followed input from POST submission through storage, HTML encoding, DOM attribute retrieval, and a second HTML interpretation boundary.
+- **Secure code review and remediation:** removed an unsafe DOM sink, constrained accepted URLs, and built canonical destinations from validated video IDs.
+- **Control testing:** checked both preventive validation and safe handling of legacy data, while preserving valid application behavior.
+- **Risk communication:** distinguished demonstrated script execution from potential business impact and documented residual risks in a [threat model and review](docs/security-review.md).
+- **Version control:** developed on a feature branch, reviewed staged changes, made focused commits, and merged through [pull request #1](https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass/pull/1). [Development record →](docs/local-guestbook.md#git-workflow)
 
-I started with normal input, traced where it appeared, and used markers to identify attribute boundaries before testing executable payloads. The three levels exposed different problems:
+## Root cause and fix
 
-| Level | Defense or behavior examined | Recorded outcome |
+```mermaid
+flowchart LR
+    A[Submitted URL] --> B[PHP and JSON storage]
+    B --> C[Encoded HTML attribute]
+    C --> D[JavaScript reads DOM value]
+    D --> E[Vulnerable: concatenate into innerHTML]
+    D --> F[Fixed: validate and create elements]
+    E --> G[Injected markup executes]
+    F --> H[Canonical video link or plain rejection text]
+```
+
+Initial HTML encoding protects the original attribute boundary. It does not make a later `innerHTML` assignment safe. The remediation addresses both input acceptance and the DOM sink, consistent with [OWASP XSS prevention guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html).
+
+| Control | Implementation | Evidence |
 | --- | --- | --- |
-| L1 | Input embedded in server-rendered HTML attributes | An injected image error handler displayed `Hello`. |
-| L2 | Initial output encoding using `htmlspecialchars()`, followed by client-side HTML construction | The same payload displayed `Hello` after the stored value was reused in `innerHTML`. |
-| L3 | Additional processing and replacement of parent-window dialog functions | A separate failing image called an iframe window's `alert()` and displayed `Hello`. |
+| Reject unsupported input before storage | [PHP validation](guestbook/index.php) accepts HTTPS YouTube watch URLs with an 11-character video ID. | HTTP and browser rejection checks; unchanged storage. |
+| Keep output as data at the HTML boundary | PHP `htmlspecialchars()` for quoted attributes and text. | Legacy-payload response encoding test. |
+| Avoid HTML reconstruction | `createElement`, validated attributes, `appendChild`, `replaceChildren`; `textContent` for rejection. | Browser tests assert no alert or injected event handler and retain the expected valid link. |
+| Keep comparisons and data separate | [Vulnerable demonstration](guestbook/vulnerable.php), separate JSON files, ignored runtime data. | HTTP storage-isolation test. |
 
-These outcomes come from my lab notes and screenshots. Fresh-visit verification limits are documented below; this write-up does not claim a new live retest.
+## Before and after evidence
 
-## Scope
+### Vulnerable local reproduction
 
-All testing described here concerns my instructor-assigned guestbooks in an authorized educational environment. Student-specific target URLs and my student ID are omitted from this public version. The payload URLs below are submitted input strings, not links to the vulnerable guestbooks.
+![Local guestbook displaying a Hello alert before remediation](images/local-xss-before.png)
 
-## 1. Tracing input through the application
+*Execution before remediation, captured while the vulnerable implementation was still `index.php`. Persistence was checked separately; a single screenshot does not establish it.*
 
-I first posted a normal YouTube URL and confirmed that its video appeared at the bottom of the page:
+### Fixed rendering
 
-```text
-https://www.youtube.com/watch?v=3URtTIdnXIk
+![Fixed guestbook rejecting an invalid saved entry while preserving a valid thumbnail](images/local-xss-after.png)
+
+*An existing invalid entry is replaced with text while a valid thumbnail remains. These are cropped development captures; the underlying results were not recreated.*
+
+## Run the application
+
+Requires PHP 8.1+ and Git. Tested during development with Homebrew PHP 8.5.12 on macOS. Repository access is required while it remains private.
+
+```bash
+git clone https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass.git
+cd Stored-XSS-Analysis-and-Defense-Bypass
+mkdir -p storage
+php -S 127.0.0.1:8000 -t guestbook
 ```
 
-Inspector showed the URL in several places:
+- Fixed application: <http://127.0.0.1:8000/>
+- Intentionally vulnerable comparison: <http://127.0.0.1:8000/vulnerable.php>
 
-- `data-url` held a value read by page JavaScript.
-- `href` controlled the generated link destination.
-- `src` held a thumbnail URL constructed from the extracted video ID.
+Use localhost only. Stop the server with Control+C. Storage stays outside the served directory. Thumbnails require internet access; security tests block external thumbnail requests.
 
-I then submitted a marker:
+Supported submission example: `https://www.youtube.com/watch?v=bGpB9q6Oym0`. Short links and extra query parameters are deliberately outside the current submission policy.
 
-```text
-https://www.youtube.com/watch?v=3URtTIdnXIk&lab=MARKER123
+## Run the tests
+
+HTTP checks need Python 3 and PHP, with no extra Python packages:
+
+```bash
+python3 tests/test_guestbook.py
 ```
 
-The marker appeared in all three contexts. This established that the application carried extra input into both stored markup and generated attributes.
+Browser checks additionally use Playwright and Chromium:
 
-A useful distinction throughout the lab was **source versus DOM**. View Page Source showed the server's returned HTML. Inspector showed the browser's parsed DOM after JavaScript had modified it. The two views did not always contain the same elements.
-
-## 2. L1 — Breaking out of an HTML attribute
-
-### Boundary probes
-
-I appended a quote and inspected the response. Three broken thumbnails were visible after the test, but I did not establish that the quote caused all three.
-
-Next, I used a quote followed by a `data-test` attribute containing `BOUNDARY456`. Inspector showed that a new attribute had been created. My written notes use typographic quotes for that probe, so I do not treat that transcription as an exact, reproducible input.
-
-### Successful payload
-
-```text
-https://www.youtube.com/watch?v=3URtTIdnXIk"><img src=x onerror="alert('Hello')">
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+python -m playwright install chromium
+python tests/test_browser.py
 ```
 
-The payload worked through the following sequence:
+[Detailed validation matrix and limitations →](docs/validation.md)
 
-1. `"` terminated the original quoted attribute value.
-2. `>` ended the opening tag.
-3. `<img src=x ...>` introduced a new image element.
-4. The image request failed in the lab, triggering `onerror`.
-5. The handler called `alert('Hello')`.
+## Project guide
 
-The active image markup was visible in the returned source, and the browser displayed the alert. My notes also state that the popup appeared on later visits, supporting a stored-XSS result.
+| Resource | Purpose |
+| --- | --- |
+| [Security review](docs/security-review.md) | Threat model, impact assessment, control decisions, residual risks. |
+| [Validation](docs/validation.md) | Automated and manual checks, reproduction steps, test scope. |
+| [Development record](docs/local-guestbook.md) | Implementation chronology, original observations, Git workflow. |
+| [Original investigation](docs/original-investigation.md) | Background analysis of three authorized course-lab defensive layers. |
 
-![L1 server response containing the injected image and earlier trials](images/l1-source.png)
+## Scope and ownership
 
-*L1 source evidence. The final `img`/`onerror` markup is present in the server response; earlier trial fragments are also preserved.*
+This independent local reproduction grew from an authorized course investigation. The original university application was not modified. I ran the development commands and manual browser checks with AI guidance; later completion work added documentation and automated tests with AI assistance.
 
-![L1 Hello alert](images/l1-alert.png)
-
-*The L1 browser displayed `Hello`.*
-
-For this L1 payload, the immediate execution path was the server-rendered HTML breakout. It should not be attributed solely to the later thumbnail-building `innerHTML` assignment. That script can replace the container's contents after initial parsing, which explains why source evidence can differ from the final Inspector tree.
-
-### Other recorded trials
-
-The source screenshot also contains script-tag fragments, `document.write()`/button fragments, and `onload` attribute attempts. Their complete submitted inputs and individual outcomes were not preserved in the prose notes. I do not reconstruct them as complete payloads or label them successful. A button requiring a click would also need separate evaluation against the visit-triggered alert objective.
-
-## 3. L2 — Encoding at one boundary did not protect the next
-
-L2 added the `htmlspecialchars()` protection described in the assignment. I submitted the successful L1 payload again and compared the source with the rendered result.
-
-```text
-https://www.youtube.com/watch?v=3URtTIdnXIk"><img src=x onerror="alert('Hello')">
-```
-
-The response showed HTML character references such as `&quot;`, `&gt;`, and `&lt;` around the stored payload. That is evidence that the initial output was encoded.
-
-![L2 encoded response and thumbnail-building JavaScript](images/l2-source.png)
-
-*The L2 response contains encoded input in `data-url`, followed by JavaScript that constructs HTML from the retrieved value.*
-
-The vulnerable pattern was:
-
-```javascript
-var url = decodeURI(video.getAttribute("data-url"));
-// The page derives a thumbnail ID from url, then concatenates
-// url and that ID into an HTML string assigned to video.innerHTML.
-```
-
-This excerpt summarizes the relevant source operations; it is not a complete application listing.
-
-The browser resolves HTML character references while parsing the original attribute. `getAttribute()` reads that resulting DOM value; it does not fetch the original PHP input and is not itself an HTML-entity decoder. The separate `decodeURI()` call handles URI escapes, not HTML entities.
-
-When the script concatenated that value into a new HTML string and assigned it to `innerHTML`, the browser parsed it again. Characters that had been attribute data could now become markup. The injected image's error handler displayed `Hello`.
-
-![L2 Hello alert](images/l2-alert.png)
-
-*The same input produced a `Hello` alert in L2.*
-
-The lesson was not that `htmlspecialchars()` did nothing. It encoded the initial response, but the application subsequently reused the resulting DOM value in an unsafe HTML interpretation context.
-
-## 4. L3 — Separating code execution from popup behavior
-
-### Initial probes
-
-After confirming normal video functionality, I submitted:
-
-```text
-https://www.youtube.com/watch?v=3URtTIdnXIkTEST123"'<>&
-https://www.youtube.com/watch?v=TEST123" data-probe="CHECK456
-https://www.youtube.com/watch?v=TEST123" onerror="alert('Hello')
-https://www.youtube.com/watch?v=TEST123" onerror="alert('Hello')" x="
-```
-
-Each line represents a separate trial.
-
-The attribute probe showed that an attribute could still be introduced. The direct-alert trials did not produce the desired popup. Adding `x="` attempted to absorb the generated suffix, but an error handler alone does not make an image fail.
-
-I also moved the special characters before `TEST123` and observed different processing. The exact second input was not preserved. Visible characters in Inspector alone cannot establish whether the server encoded its response or identify L3's undisclosed server-side checks.
-
-### Two separate failure conditions
-
-Troubleshooting identified two independent issues:
-
-1. **The event needed to fire.** A selected YouTube thumbnail had `naturalWidth: 120`, showing it had loaded. There was no image error to invoke its handler. Manually changing its source to a nonexistent resource produced a 404 and an iframe-based `Hello` alert. That was a diagnostic Console test, not proof of stored execution on a fresh visit.
-2. **The called function needed to display the dialog.** The page loaded `js/js-overrides.js`, which replaced parent-window `alert`, `confirm`, and `prompt` functions. Its wrapper called the original function only when `exec_original` was true; `alert` was registered with false.
-
-![L3 dialog function overrides](images/l3-overrides.png)
-
-*The supplied script suppresses calls to selected parent-window functions. It does not replace the browser's image-error event system.*
-
-A later attempt to inject a failing `src` alongside the iframe handler also failed: inspection showed that the injected source belonged to the anchor while the image retained its YouTube source. This motivated creating a separate image rather than relying on an existing thumbnail to fail.
-
-### Successful payload
-
-```text
-https://www.youtube.com/watch?v=TEST123"><img src=x onerror="document.body.appendChild(document.createElement('iframe')).contentWindow.alert('Hello')">
-```
-
-This input created its own failing image. Its handler created and appended an iframe, accessed its `contentWindow`, and called that window's `alert('Hello')`. In the observed lab environment, the new frame provided an accessible window whose alert function had not been replaced by the parent script.
-
-I reported this exact input as working in the troubleshooting conversation and preserved the same payload and a popup screenshot in my notes.
-
-![L3 Hello alert and generated image error handlers](images/l3-alert.png)
-
-*Final L3 result. Inspector shows separate image elements with the iframe-based alert handler.*
-
-The DOM supports unsafe HTML reconstruction as a relevant execution path. The evidence does not isolate every possible server-versus-client execution path, so I do not assert an exact undocumented server filter.
-
-## 5. Verification and evidence limits
-
-| Claim | Supporting evidence | Remaining limit |
-| --- | --- | --- |
-| L1 injected executable markup | Active source markup and a `Hello` screenshot; notes report later-visit alerts | No separate screenshot tying a fresh visit to the final clean demonstration URL |
-| L2 remained vulnerable after initial encoding | Encoded source, HTML reconstruction code, and `Hello` screenshot | No separate fresh-visit record or fresh-page reproduction |
-| L3 iframe payload produced a popup | Exact payload in notes and chat, plus final alert/DOM screenshot | Final screenshot has Inspector open; no separate clean-visit record |
-
-To verify persistence, the saved guestbook must display the alert on an ordinary reload or fresh visit without Console commands, manual DOM changes, or a video click. Reproduction on a fresh vulnerable instance is a separate check. Those checks should not be inferred solely from a popup screenshot.
-
-Screenshots in this repository are taken from my lab notes. Browser chrome containing assigned URLs has been cropped from the public copies; the displayed page and code content has not been regenerated.
-
-## 6. Security lessons and remediation
-
-This lab reinforced three practical lessons:
-
-- Stored input can escape its intended attribute context and introduce executable HTML.
-- Encoding must be evaluated at every interpretation boundary. Initial response encoding does not make later `innerHTML` use safe.
-- Suppressing `alert()` changes a visible symptom; it does not eliminate injected JavaScript execution.
-
-A corrective design would validate the expected YouTube host and video ID, create elements using DOM methods, and set validated attributes without concatenating untrusted values into HTML. Any server-rendered HTML still needs encoding appropriate to its output context. These are proposed improvements, not fixes implemented or tested during this lab.
+This is a focused XSS remediation case study. Authentication, CSRF protection, concurrent JSON updates, and production error handling remain outside the implemented controls. No payment system, customer data, or employer environment was tested. Potential impact beyond the observed alert is discussed as a threat scenario, not a demonstrated compromise.

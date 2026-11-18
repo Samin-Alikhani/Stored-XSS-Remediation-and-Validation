@@ -2,7 +2,7 @@
 
 ## Project scope
 
-After analyzing the instructor-provided guestbooks, I built an independent PHP guestbook on my MacBook to reproduce the unsafe DOM rendering pattern and implement a fix. This application is my local reproduction; it is not the original university application or a patch to its server. The original lab report and its evidence limits remain in the repository README.
+After analyzing the instructor-provided guestbooks, I built an independent PHP guestbook on my MacBook to reproduce the unsafe DOM rendering pattern and implement a fix. This application is my local reproduction; it is not the original university application or a patch to its server. The [original investigation](original-investigation.md) retains the course-lab evidence and its limits.
 
 The project uses PHP, JavaScript, HTML, JSON file storage, Git, and GitHub. My development environment used Homebrew PHP 8.5.12 and Git 2.55.0.
 
@@ -13,12 +13,11 @@ Install PHP and Git. Python 3 is needed only for automated tests. From Terminal:
 ```bash
 git clone https://github.com/Samin-Alikhani/Stored-XSS-Analysis-and-Defense-Bypass.git
 cd Stored-XSS-Analysis-and-Defense-Bypass
-git switch local-guestbook
 mkdir -p storage
 php -S 127.0.0.1:8000 -t guestbook
 ```
 
-The repository is private, so cloning requires access and GitHub authentication. If GitHub CLI is installed, `gh auth login` supports browser authentication. After this project is merged, the same application is also available on `main`.
+The repository is private, so cloning requires access and GitHub authentication. If GitHub CLI is installed, `gh auth login` supports browser authentication. The completed project is on `main`.
 
 Open the fixed page at <http://127.0.0.1:8000/> and the intentionally vulnerable demonstration at <http://127.0.0.1:8000/vulnerable.php>. Keep this educational application on localhost. Stop the server with Control+C. External thumbnail images require internet access.
 
@@ -82,7 +81,7 @@ The suite copies the application to a temporary directory, starts its own PHP se
 
 Five tests cover valid persistence and refresh behavior; rejected payloads and malformed URLs without storage changes; array-shaped form input; HTML encoding of a legacy payload; and separate vulnerable-demo storage and redirects. All five passed during the November 17 completion review.
 
-These HTTP tests do not execute browser JavaScript. The no-popup and thumbnail checks above are manual browser tests, not automated browser coverage.
+These HTTP tests do not execute JavaScript. The additional browser suite in `tests/test_browser.py` verifies vulnerable execution, fixed legacy-entry handling, and form rejection. See [validation instructions](validation.md) for setup and coverage limits.
 
 ## Git workflow
 

@@ -6,6 +6,14 @@ A hands-on web security lab investigating how stored input becomes executable HT
 **Course:** CS 5713 — Practical Attack & Defense Techniques, Fall 2026  
 **Tools:** Firefox, View Page Source, Inspector, and Console
 
+## Local reproduction and implemented remediation
+
+I extended this analysis with an independent PHP guestbook developed locally on my MacBook. It includes vulnerable and fixed versions, separate JSON storage, server-side URL validation, safe DOM construction, and repeatable HTTP regression tests. I confirmed the local payload persisted before remediation and checked rejection and normal functionality after the fixes.
+
+**[Setup, implementation, test results, and Git workflow](docs/local-guestbook.md)** · [Fixed application](guestbook/index.php) · [Vulnerable demonstration](guestbook/vulnerable.php) · [Automated tests](tests/test_guestbook.py)
+
+The course-lab report below is preserved separately; its evidence limits concern the original instructor-provided application.
+
 ## Overview
 
 I tested three versions of an instructor-provided VideoBlog guestbook. Each version accepted a YouTube URL and displayed a video entry. My objective was to store an input that displayed a `Hello` alert when the guestbook was visited.

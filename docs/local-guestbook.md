@@ -54,9 +54,21 @@ https://www.youtube.com/watch?v=bGpB9q6Oym0"><img src=x onerror="alert('Hello')"
 | Submit a valid watch URL after validation | Thumbnail appeared at the top and persisted on a fresh visit. |
 | Refresh after a successful submission | Entry count stayed unchanged; the POST/303/GET flow prevented refresh resubmission. |
 
-These are manually reported browser checks from development. They do not establish that every possible XSS payload has been tested. Existing screenshots in `images/` document the original course lab, not this new local application.
+These are manually reported browser checks from development. They do not establish that every possible XSS payload has been tested. The original `l1-`, `l2-`, and `l3-` screenshots in `images/` document the course lab. The local screenshots below document this independent reproduction.
 
 To repeat the vulnerable demonstration, submit the payload to `/vulnerable.php`, dismiss the alert, and revisit that address without submitting. To repeat legacy-data remediation testing without changing personal data, use a disposable copy: first store the payload while its default page is vulnerable, then apply the rendering fix and revisit. Do not move vulnerable data into a real application.
+
+## Local screenshot evidence
+
+![Local guestbook displaying a Hello alert before remediation](../images/local-xss-before.png)
+
+*Before remediation: the original local `index.php` displays a `Hello` alert alongside malformed injected markup. This capture predates the split into vulnerable and fixed pages. It demonstrates execution; the fresh-visit persistence result is recorded in the manual checks above.*
+
+![Fixed local guestbook displaying invalid-entry text and a valid thumbnail](../images/local-xss-after.png)
+
+*After the rendering fix: an existing invalid entry displays “Invalid YouTube URL — entry not rendered.” A valid video thumbnail remains visible below it. This capture documents rendering behavior, not server-side storage rejection or automated test results.*
+
+Both images are crops of the original development screenshots. Chat panes, unrelated controls, and excess page area were removed; page content and results were not recreated or altered.
 
 ## Automated regression checks
 

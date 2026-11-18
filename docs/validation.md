@@ -53,6 +53,8 @@ Completion review on November 17, 2026: all five HTTP checks and all three Chrom
 
 These targeted HTTP and browser tests demonstrate dynamic security regression testing. They are not a general DAST scan. No SAST or software-composition-analysis result is claimed. The application has no third-party runtime packages; the browser automation library is a development dependency and still requires maintenance.
 
-## Continuous integration
+## Continuous integration template
 
-The regression workflow runs syntax, HTTP, and Chromium checks on pushes and pull requests. Its configured commands mirror local validation. A workflow definition alone is not a passing result; consult the actual Actions run for the tested commit.
+A [GitHub Actions template](ci/regression.yml) contains the same syntax, HTTP, and Chromium commands. An initial GitHub attempt failed at workflow startup before creating any jobs; the available API exposed no diagnostic annotations. It is retained as an inactive template rather than presenting unverified CI as a passing control. Local execution of the tests passed.
+
+To enable it after resolving the startup issue, copy the template into `.github/workflows/regression.yml` and inspect the resulting Actions run. No CI badge or hosted-test success is claimed.

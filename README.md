@@ -2,8 +2,6 @@
 
 A hands-on web security lab investigating how stored input becomes executable HTML, why initial output encoding can fail at a later DOM sink, and why replacing `alert()` does not prevent JavaScript execution.
 
-**Author:** Samin Alikhani  
-**Course:** CS 5713 — Practical Attack & Defense Techniques, Fall 2026  
 **Tools:** Firefox, View Page Source, Inspector, and Console
 
 ## Local reproduction and implemented remediation
